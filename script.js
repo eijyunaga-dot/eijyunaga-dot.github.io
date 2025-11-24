@@ -2,7 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Constants & Config ---
     const DEFAULT_PRESETS = [
         "上着", "ズボン", "肌着上", "肌着下", "靴下", "上靴", "下靴",
-        "羽織り", "帽子類", "コート", "タオル", "杖", "シルバーカー", "車椅子"
+        "羽織り", "帽子類", "コート", "タオル", "杖", "シルバーカー", "車椅子",
+        "x2", "x3", "x4", "x5"
     ];
     const MAX_STAMPS = 8;
 
@@ -510,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
-                    title: 'Photo Stamper',
+                    title: '荷物スタンプ',
                     text: 'スタンプ画像を保存'
                 });
                 resetEditor(); // Auto-reset after share

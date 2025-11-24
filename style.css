@@ -1,13 +1,14 @@
 :root {
-    --bg-color: #121212;
-    --surface-color: #1e1e1e;
-    --primary-color: #bb86fc;
-    --secondary-color: #03dac6;
-    --text-color: #e0e0e0;
-    --border-color: #333;
-    --glass-bg: rgba(30, 30, 30, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --danger-color: #cf6679;
+    --bg-color: #1a0838;
+    --surface-color: #2d1454;
+    --primary-color: #ff6ec7;
+    --secondary-color: #7efff5;
+    --text-color: #f0f0f0;
+    --border-color: #6b4d9e;
+    --glass-bg: rgba(45, 20, 84, 0.85);
+    --glass-border: rgba(255, 110, 199, 0.3);
+    --danger-color: #ff6b9d;
+    --accent-color: #ffbd59;
 }
 
 * {
@@ -92,49 +93,51 @@ body {
     font-weight: 700;
     background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.5rem;
 }
 
 /* Home Screen */
-.menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    max-width: 800px;
-    margin: 0 auto;
-    width: 100%;
-    padding: 1rem;
-}
-
-.menu-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 2rem;
+.home-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: var(--text-color);
+    justify-content: center;
+    height: 100%;
+    gap: 2rem;
 }
 
-.menu-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.menu-card .icon {
+.app-title {
     font-size: 3rem;
-    margin-bottom: 1rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
 }
 
-.menu-card h2 {
-    margin-bottom: 0.5rem;
-    color: var(--primary-color);
+.app-subtitle {
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    text-align: center;
+}
+
+.home-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.home-actions.horizontal {
+    flex-direction: row;
+}
+
+.btn.large {
+    padding: 1.2rem 2rem;
+    font-size: 1.1rem;
 }
 
 /* Settings Screen */
@@ -148,10 +151,45 @@ body {
     border: 1px solid var(--border-color);
 }
 
+.preset-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.add-preset-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.add-preset-row input {
+    flex: 1;
+}
+
+.settings-preset-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.preset-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
 .help-text {
     font-size: 0.8rem;
     color: #888;
     margin-top: 0.5rem;
+}
+
+.help-text.small {
+    font-size: 0.75rem;
 }
 
 .status-msg {
@@ -230,199 +268,17 @@ canvas {
     min-width: 320px;
 }
 
-/* Input Mode Switch */
-.input-mode-switch {
-    display: flex;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 4px;
-    gap: 4px;
-}
-
-.mode-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    color: #888;
-    padding: 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.mode-btn.active {
-    background: var(--surface-color);
-    color: var(--text-color);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Preset Grid */
-.preset-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 0.5rem;
-    max-height: 200px;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-.preset-chip {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 0.5rem;
-    font-size: 0.85rem;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s;
-}
-
-.preset-chip:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--primary-color);
-}
-
-.preset-chip.selected {
-    background: var(--primary-color);
-    color: #000;
-    border-color: var(--primary-color);
-    font-weight: 600;
-}
-
-/* Controls */
-.control-group {
+/* Stamp Management */
+.stamp-management {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-label {
-    font-size: 0.8rem;
-    color: var(--secondary-color);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-input[type="text"],
-input[type="password"] {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-color);
-    padding: 0.8rem;
-    border-radius: 8px;
-    color: white;
-    font-size: 1rem;
-    width: 100%;
-}
-
-input[type="range"] {
-    width: 100%;
-    accent-color: var(--primary-color);
-}
-
-.color-picker-wrapper {
+.stamp-actions {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.5rem;
-    border-radius: 8px;
-}
-
-input[type="color"] {
-    border: none;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    background: none;
-}
-
-/* Actions */
-.actions.vertical {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-}
-
-.btn {
-    padding: 1rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 0.5rem;
-    transition: all 0.2s;
-    font-size: 1rem;
-}
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn.primary {
-    background: var(--primary-color);
-    color: #000;
-}
-
-.btn.secondary {
-    background: #0061fe;
-    /* Dropbox Blue */
-    color: white;
-}
-
-.btn.outline {
-    flex-direction: row;
-}
-}
-
-.canvas-container {
-    flex: 2;
-    background-color: #000;
-    border-radius: 16px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border-color);
-    min-height: 300px;
-}
-
-.upload-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-color);
-    opacity: 0.5;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-}
-
-canvas {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
-
-.controls {
-    flex: 1;
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    overflow-y: auto;
-    min-width: 320px;
+    flex-wrap: wrap;
 }
 
 /* Input Mode Switch */
@@ -566,7 +422,6 @@ input[type="color"] {
 
 .btn.secondary {
     background: #0061fe;
-    /* Dropbox Blue */
     color: white;
 }
 
@@ -576,14 +431,27 @@ input[type="color"] {
     color: var(--text-color);
 }
 
-.btn:active {
-    transform: scale(0.98);
+.btn.danger {
+    background: var(--danger-color);
+    color: #000;
 }
 
-/* Icon Images */
-.menu-card .icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
+.btn.danger.outline {
+    background: transparent;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+}
+
+.btn.small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active:not(:disabled) {
+    transform: scale(0.98);
 }
