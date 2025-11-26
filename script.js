@@ -7,6 +7,204 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const MAX_STAMPS = 8;
 
+    const TRANSLATIONS = {
+        ja: {
+            appTitle: "荷物スタンプ",
+            appSubtitle: "写真にスタンプを追加",
+            start: "はじめる",
+            settings: "設定",
+            back: "戻る",
+            language: "言語 / Language",
+            managePresets: "スタンプ定型文の管理",
+            newPresetPlaceholder: "新しい定型文...",
+            add: "追加",
+            resetPresets: "初期設定に戻す",
+            home: "ホームへ",
+            edit: "編集",
+            uploadPrompt: "画像をタップまたはドラッグしてアップロード",
+            modePreset: "定型文",
+            modeCustom: "自由入力",
+            addStamp: "+ スタンプ追加",
+            delete: "削除",
+            addStampHelp: "追加ボタンの後に文字を選択",
+            selectStampHelp: "スタンプをタップして選択",
+            selectStamp: "スタンプを選択",
+            textInput: "テキスト入力",
+            textInputPlaceholder: "ここに入力...",
+            fontSize: "フォントサイズ",
+            opacity: "透明度",
+            textColor: "文字色",
+            saveDevice: "本体に保存",
+            savePC: "画像を保存(PC)",
+            previewOld: "プレビュー(旧iPad用)",
+            reset: "リセット",
+            previewTitle: "プレビュー",
+            previewInstruction: "画像を長押しして「写真に保存」を選択してください",
+            close: "閉じる",
+            statusAdded: "追加しました",
+            statusReset: "初期化しました",
+            confirmDelete: "この定型文を削除しますか？",
+            confirmReset: "定型文を初期状態に戻しますか？追加した内容は消去されます。",
+            errorSave: "保存中にエラーが発生しました。"
+        },
+        en: {
+            appTitle: "Photo Stamper",
+            appSubtitle: "Add stamps to photos",
+            start: "Start",
+            settings: "Settings",
+            back: "Back",
+            language: "Language",
+            managePresets: "Manage Presets",
+            newPresetPlaceholder: "New preset...",
+            add: "Add",
+            resetPresets: "Reset Presets",
+            home: "Home",
+            edit: "Edit",
+            uploadPrompt: "Tap or drag to upload image",
+            modePreset: "Presets",
+            modeCustom: "Custom",
+            addStamp: "+ Add Stamp",
+            delete: "Delete",
+            addStampHelp: "Select text after adding",
+            selectStampHelp: "Tap stamp to select",
+            selectStamp: "Select Stamp",
+            textInput: "Text Input",
+            textInputPlaceholder: "Enter text...",
+            fontSize: "Font Size",
+            opacity: "Opacity",
+            textColor: "Text Color",
+            saveDevice: "Save to Device",
+            savePC: "Save (PC)",
+            previewOld: "Preview (Old iPad)",
+            reset: "Reset",
+            previewTitle: "Preview",
+            previewInstruction: "Long press image to save",
+            close: "Close",
+            statusAdded: "Added",
+            statusReset: "Reset complete",
+            confirmDelete: "Delete this preset?",
+            confirmReset: "Reset presets to default? Custom presets will be lost.",
+            errorSave: "Error saving image."
+        },
+        hi: {
+            appTitle: "फोटो स्टैम्प",
+            appSubtitle: "फोटो पर स्टैम्प जोड़ें",
+            start: "शुरू करें",
+            settings: "सेटिंग्स",
+            back: "वापस",
+            language: "भाषा / Language",
+            managePresets: "प्रीसेट प्रबंधित करें",
+            newPresetPlaceholder: "नया प्रीसेट...",
+            add: "जोड़ें",
+            resetPresets: "प्रीसेट रीसेट करें",
+            home: "होम",
+            edit: "संपादित करें",
+            uploadPrompt: "छवि अपलोड करने के लिए टैप या ड्रैग करें",
+            modePreset: "प्रीसेट",
+            modeCustom: "कस्टम",
+            addStamp: "+ स्टैम्प जोड़ें",
+            delete: "हटाएं",
+            addStampHelp: "जोड़ने के बाद टेक्स्ट चुनें",
+            selectStampHelp: "चुनने के लिए स्टैम्प पर टैप करें",
+            selectStamp: "स्टैम्प चुनें",
+            textInput: "टेक्स्ट इनपुट",
+            textInputPlaceholder: "यहाँ लिखें...",
+            fontSize: "फ़ॉन्ट आकार",
+            opacity: "अपारदर्शिता",
+            textColor: "टेक्स्ट का रंग",
+            saveDevice: "डिवाइस में सहेजें",
+            savePC: "सहेजें (PC)",
+            previewOld: "पूर्वावलोकन (पुराना iPad)",
+            reset: "रीसेट",
+            previewTitle: "पूर्वावलोकन",
+            previewInstruction: "सहेजने के लिए छवि को देर तक दबाएं",
+            close: "बंद करें",
+            statusAdded: "जोड़ा गया",
+            statusReset: "रीसेट पूरा हुआ",
+            confirmDelete: "क्या आप इस प्रीसेट को हटाना चाहते हैं?",
+            confirmReset: "क्या आप प्रीसेट को डिफ़ॉल्ट पर रीसेट करना चाहते हैं?",
+            errorSave: "छवि सहेजने में त्रुटि।"
+        },
+        vi: {
+            appTitle: "Đóng Dấu Ảnh",
+            appSubtitle: "Thêm dấu vào ảnh",
+            start: "Bắt đầu",
+            settings: "Cài đặt",
+            back: "Quay lại",
+            language: "Ngôn ngữ / Language",
+            managePresets: "Quản lý mẫu",
+            newPresetPlaceholder: "Mẫu mới...",
+            add: "Thêm",
+            resetPresets: "Đặt lại mẫu",
+            home: "Trang chủ",
+            edit: "Chỉnh sửa",
+            uploadPrompt: "Chạm hoặc kéo để tải ảnh lên",
+            modePreset: "Mẫu có sẵn",
+            modeCustom: "Tự nhập",
+            addStamp: "+ Thêm dấu",
+            delete: "Xóa",
+            addStampHelp: "Chọn văn bản sau khi thêm",
+            selectStampHelp: "Chạm vào dấu để chọn",
+            selectStamp: "Chọn dấu",
+            textInput: "Nhập văn bản",
+            textInputPlaceholder: "Nhập vào đây...",
+            fontSize: "Cỡ chữ",
+            opacity: "Độ mờ",
+            textColor: "Màu chữ",
+            saveDevice: "Lưu vào máy",
+            savePC: "Lưu (PC)",
+            previewOld: "Xem trước (iPad cũ)",
+            reset: "Đặt lại",
+            previewTitle: "Xem trước",
+            previewInstruction: "Nhấn giữ ảnh để lưu",
+            close: "Đóng",
+            statusAdded: "Đã thêm",
+            statusReset: "Đã đặt lại",
+            confirmDelete: "Xóa mẫu này?",
+            confirmReset: "Đặt lại mẫu về mặc định? Các mẫu tùy chỉnh sẽ bị mất.",
+            errorSave: "Lỗi khi lưu ảnh."
+        },
+        ne: {
+            appTitle: "फोटो स्ट्याम्प",
+            appSubtitle: "फोटोमा स्ट्याम्प थप्नुहोस्",
+            start: "सुरु गर्नुहोस्",
+            settings: "सेटिङहरू",
+            back: "फर्कनुहोस्",
+            language: "भाषा / Language",
+            managePresets: "प्रिसेटहरू व्यवस्थापन गर्नुहोस्",
+            newPresetPlaceholder: "नयाँ प्रिसेट...",
+            add: "थप्नुहोस्",
+            resetPresets: "प्रिसेट रिसेट गर्नुहोस्",
+            home: "गृहपृष्ठ",
+            edit: "सम्पादन",
+            uploadPrompt: "तस्बिर अपलोड गर्न ट्याप वा ड्र्याग गर्नुहोस्",
+            modePreset: "प्रिसेट",
+            modeCustom: "कस्टम",
+            addStamp: "+ स्ट्याम्प थप्नुहोस्",
+            delete: "हटाउनुहोस्",
+            addStampHelp: "थपेपछि पाठ छान्नुहोस्",
+            selectStampHelp: "छान्न स्ट्याम्पमा ट्याप गर्नुहोस्",
+            selectStamp: "स्ट्याम्प छान्नुहोस्",
+            textInput: "पाठ इनपुट",
+            textInputPlaceholder: "यहाँ लेख्नुहोस्...",
+            fontSize: "फन्ट साइज",
+            opacity: "पारदर्शिता",
+            textColor: "पाठको रङ",
+            saveDevice: "यन्त्रमा सुरक्षित गर्नुहोस्",
+            savePC: "सुरक्षित गर्नुहोस् (PC)",
+            previewOld: "पूर्वावलोकन (पुरानो iPad)",
+            reset: "रिसेट",
+            previewTitle: "पूर्वावलोकन",
+            previewInstruction: "सुरक्षित गर्न तस्बिरलाई लामो समय थिच्नुहोस्",
+            close: "बन्द गर्नुहोस्",
+            statusAdded: "थपियो",
+            statusReset: "रिसेट पूरा भयो",
+            confirmDelete: "यो प्रिसेट हटाउने हो?",
+            confirmReset: "प्रिसेटहरू डिफल्टमा रिसेट गर्ने हो?",
+            errorSave: "तस्बिर सुरक्षित गर्दा त्रुटि।"
+        }
+    };
+
     // --- Elements ---
     // Screens
     const screens = {
@@ -26,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsPresetList = document.getElementById('settingsPresetList');
     const resetPresetsBtn = document.getElementById('resetPresetsBtn');
     const settingsStatus = document.getElementById('settingsStatus');
+    const languageSelect = document.getElementById('languageSelect');
 
     // Editor - Canvas & Upload
     const uploadPlaceholder = document.getElementById('uploadPlaceholder');
@@ -48,7 +247,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Editor - Actions
     const saveLocalBtn = document.getElementById('saveLocalBtn');
+    const savePCBtn = document.getElementById('savePCBtn');
+    const previewBtn = document.getElementById('previewBtn');
     const resetBtn = document.getElementById('resetBtn');
+
+    // Modal
+    const previewModal = document.getElementById('previewModal');
+    const previewImage = document.getElementById('previewImage');
+    const closeModalBtns = document.querySelectorAll('.close-modal-btn');
 
     // --- State ---
     let state = {
@@ -58,7 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
         activeStampIndex: 0,
         isDragging: false,
         inputMode: 'preset', // 'preset' or 'custom'
-        presets: JSON.parse(localStorage.getItem('photoStamperPresets')) || [...DEFAULT_PRESETS]
+        presets: JSON.parse(localStorage.getItem('photoStamperPresets')) || [...DEFAULT_PRESETS],
+        language: localStorage.getItem('photoStamperLanguage') || 'ja'
     };
 
     // --- Initialization ---
@@ -66,7 +273,44 @@ document.addEventListener('DOMContentLoaded', () => {
         initNavigation();
         initPresetSettings();
         initEditor();
+        initLanguage();
         renderPresets(); // Render editor presets
+    }
+
+    // --- Language Logic ---
+    function initLanguage() {
+        languageSelect.value = state.language;
+        updateLanguage(state.language);
+
+        languageSelect.addEventListener('change', (e) => {
+            const lang = e.target.value;
+            state.language = lang;
+            localStorage.setItem('photoStamperLanguage', lang);
+            updateLanguage(lang);
+        });
+    }
+
+    function updateLanguage(lang) {
+        const t = TRANSLATIONS[lang];
+        if (!t) return;
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) {
+                el.textContent = t[key];
+            }
+        });
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key]) {
+                el.placeholder = t[key];
+            }
+        });
+    }
+
+    function getTranslation(key) {
+        return TRANSLATIONS[state.language][key] || key;
     }
 
     // --- Navigation Logic ---
@@ -116,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = preset;
 
             const delBtn = document.createElement('button');
-            delBtn.textContent = '削除';
+            delBtn.textContent = getTranslation('delete');
             delBtn.className = 'btn small danger';
             delBtn.addEventListener('click', () => deletePreset(index));
 
@@ -133,12 +377,12 @@ document.addEventListener('DOMContentLoaded', () => {
             savePresets();
             newPresetInput.value = '';
             renderSettingsPresets();
-            showStatus('追加しました');
+            showStatus(getTranslation('statusAdded'));
         }
     }
 
     function deletePreset(index) {
-        if (confirm('この定型文を削除しますか？')) {
+        if (confirm(getTranslation('confirmDelete'))) {
             state.presets.splice(index, 1);
             savePresets();
             renderSettingsPresets();
@@ -146,11 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetPresets() {
-        if (confirm('定型文を初期状態に戻しますか？追加した内容は消去されます。')) {
+        if (confirm(getTranslation('confirmReset'))) {
             state.presets = [...DEFAULT_PRESETS];
             savePresets();
             renderSettingsPresets();
-            showStatus('初期化しました');
+            showStatus(getTranslation('statusReset'));
         }
     }
 
@@ -231,7 +475,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Actions
         saveLocalBtn.addEventListener('click', saveLocal);
+        savePCBtn.addEventListener('click', savePC);
+        previewBtn.addEventListener('click', savePreview);
         resetBtn.addEventListener('click', resetEditor);
+
+        // Modal
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                previewModal.style.display = 'none';
+            });
+        });
+        window.addEventListener('click', (e) => {
+            if (e.target === previewModal) {
+                previewModal.style.display = 'none';
+            }
+        });
     }
 
     function updateControlsVisibility() {
@@ -283,6 +541,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 uploadPlaceholder.style.display = 'none';
                 canvas.style.display = 'block';
                 saveLocalBtn.disabled = false;
+                savePCBtn.disabled = false;
+                previewBtn.disabled = false;
                 resetBtn.disabled = false;
 
                 // Initialize first stamp
@@ -511,24 +771,49 @@ document.addEventListener('DOMContentLoaded', () => {
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
-                    title: '荷物スタンプ',
-                    text: 'スタンプ画像を保存'
+                    title: getTranslation('appTitle'),
+                    text: getTranslation('appTitle')
                 });
                 resetEditor(); // Auto-reset after share
             } else {
-                // Fallback for Desktop
-                const link = document.createElement('a');
-                link.download = fileName;
-                link.href = URL.createObjectURL(blob);
-                link.click();
-                URL.revokeObjectURL(link.href);
-                setTimeout(resetEditor, 1000); // Auto-reset after download (delay to ensure download starts)
+                // Fallback to PC save if share not supported
+                savePC();
             }
         } catch (error) {
             console.error('Save error:', error);
             if (error.name !== 'AbortError') {
-                alert('保存中にエラーが発生しました。');
+                alert(getTranslation('errorSave'));
             }
+        }
+    }
+
+    async function savePC() {
+        if (!state.currentImage) return;
+        try {
+            const blob = await getStampedImageBlob();
+            const fileName = `${state.originalFileName}_stamped.png`;
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            setTimeout(resetEditor, 1000);
+        } catch (error) {
+            console.error('Save PC error:', error);
+            alert(getTranslation('errorSave'));
+        }
+    }
+
+    async function savePreview() {
+        if (!state.currentImage) return;
+        try {
+            const blob = await getStampedImageBlob();
+            const url = URL.createObjectURL(blob);
+            previewImage.src = url;
+            previewModal.style.display = 'flex';
+        } catch (error) {
+            console.error('Preview error:', error);
+            alert(getTranslation('errorSave'));
         }
     }
 
@@ -538,6 +823,8 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadPlaceholder.style.display = 'flex';
         canvas.style.display = 'none';
         saveLocalBtn.disabled = true;
+        savePCBtn.disabled = true;
+        previewBtn.disabled = true;
         resetBtn.disabled = true;
         state.stamps = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
