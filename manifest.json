@@ -1,6 +1,6 @@
 {
     "name": "Photo Stamper",
-    "short_name": "Stamper",
+    "short_name": "すたんぱー",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#ffffff",
