@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Constants & Config ---
     const DEFAULT_PRESETS = [
         "上着", "ズボン", "肌着上", "肌着下", "靴下", "上靴", "下靴",
-        "羽織り", "帽子類", "コート", "タオル", "杖", "シルバーカー", "車椅子",
-        "x2", "x3", "x4", "x5"
+        "羽織り", "帽子類", "コート", "タオル", "杖", "SC", "車椅子",
+        "口腔セット", "x2", "x3", "x4", "x5"
     ];
     const MAX_STAMPS = 8;
 
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fontSize: "フォントサイズ",
             opacity: "透明度",
             textColor: "文字色",
-            saveDevice: "本体に保存",
+            saveDevice: "本体に保存(スマホ等)",
             savePC: "画像を保存(PC)",
             previewOld: "プレビュー(旧iPad用)",
             reset: "リセット",
@@ -45,7 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
             statusReset: "初期化しました",
             confirmDelete: "この定型文を削除しますか？",
             confirmReset: "定型文を初期状態に戻しますか？追加した内容は消去されます。",
-            errorSave: "保存中にエラーが発生しました。"
+            errorSave: "保存中にエラーが発生しました。",
+            correction: "画像補正",
+            autoCorrection: "自動補正",
+            darkCorrection: "固定補正(暗い画像)",
+            sizeCorrection: "サイズ補正(1MB)",
+            correctionApplied: "補正を適用しました",
+            saveCorrected: "補正画像を保存"
         },
         en: {
             appTitle: "Photo Stamper",
@@ -84,7 +90,13 @@ document.addEventListener('DOMContentLoaded', () => {
             statusReset: "Reset complete",
             confirmDelete: "Delete this preset?",
             confirmReset: "Reset presets to default? Custom presets will be lost.",
-            errorSave: "Error saving image."
+            errorSave: "Error saving image.",
+            correction: "Image Correction",
+            autoCorrection: "Auto Correction",
+            darkCorrection: "Fixed Correction (Dark)",
+            sizeCorrection: "Size Correction (1MB)",
+            correctionApplied: "Correction applied",
+            saveCorrected: "Save Corrected Image"
         },
         hi: {
             appTitle: "फोटो स्टैम्प",
@@ -210,12 +222,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const screens = {
         home: document.getElementById('homeScreen'),
         settings: document.getElementById('settingsScreen'),
-        editor: document.getElementById('editorScreen')
+        editor: document.getElementById('editorScreen'),
+        correction: document.getElementById('correctionScreen')
     };
 
     // Navigation
     const startBtn = document.getElementById('startBtn');
     const settingsBtn = document.getElementById('settingsBtn');
+    const correctionBtn = document.getElementById('correctionBtn');
     const backBtns = document.querySelectorAll('.back-btn');
 
     // Settings
@@ -260,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let state = {
         currentImage: null,
         originalFileName: '',
+        originalFileHandle: null, // File handle for File System Access API
         stamps: [], // Array of { id, text, x, y, fontSize, opacity, color }
         activeStampIndex: 0,
         isDragging: false,
@@ -335,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSettingsPresets();
             navigateTo('settings');
         });
+        correctionBtn.addEventListener('click', () => navigateTo('correction'));
 
         backBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -531,8 +547,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleFile(file) {
+    async function handleFile(file, fileHandle = null) {
         state.originalFileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        state.originalFileHandle = fileHandle; // Store file handle if available
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
@@ -789,15 +806,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function savePC() {
         if (!state.currentImage) return;
+
         try {
             const blob = await getStampedImageBlob();
             const fileName = `${state.originalFileName}_stamped.png`;
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = URL.createObjectURL(blob);
-            link.click();
-            URL.revokeObjectURL(link.href);
-            setTimeout(resetEditor, 1000);
+
+            // Check if File System Access API is supported
+            if ('showSaveFilePicker' in window) {
+                try {
+                    // Show save file picker dialog
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'PNG Image',
+                            accept: { 'image/png': ['.png'] }
+                        }]
+                    });
+
+                    // Write to the selected file
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+
+                    setTimeout(resetEditor, 1000);
+                } catch (err) {
+                    // User cancelled the save dialog
+                    if (err.name !== 'AbortError') {
+                        throw err;
+                    }
+                }
+            } else {
+                // Fallback to traditional download for unsupported browsers
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                setTimeout(resetEditor, 1000);
+            }
         } catch (error) {
             console.error('Save PC error:', error);
             alert(getTranslation('errorSave'));
@@ -819,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetEditor() {
         state.currentImage = null;
+        state.originalFileHandle = null;
         imageInput.value = '';
         uploadPlaceholder.style.display = 'flex';
         canvas.style.display = 'none';
