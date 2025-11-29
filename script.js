@@ -664,6 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             // Load compressed image
                             const img = new Image();
+                            const objectUrl = URL.createObjectURL(compressedBlob);
                             img.onload = () => {
                                 state.currentImage = img;
                                 uploadPlaceholder.style.display = 'none';
@@ -688,8 +689,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 updateUIFromState();
                                 draw();
+
+                                // Memory cleanup: revoke object URL
+                                URL.revokeObjectURL(objectUrl);
                             };
-                            img.src = URL.createObjectURL(compressedBlob);
+                            img.src = objectUrl;
                         }, 'image/jpeg');
 
                     } catch (error) {
@@ -740,6 +744,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         updateUIFromState();
                         draw();
+
+                        // Note: FileReader data URLs don't need revokeObjectURL
                     };
                     img.src = e.target.result;
                 };
@@ -1045,6 +1051,9 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.disabled = true;
         state.stamps = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Memory cleanup: reset canvas dimensions
+        canvas.width = 0;
+        canvas.height = 0;
     }
 
     init();

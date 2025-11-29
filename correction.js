@@ -188,6 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             // Load compressed image
                             const img = new Image();
+                            const objectUrl = URL.createObjectURL(compressedBlob);
                             img.onload = () => {
                                 correctionState.originalImage = img;
                                 correctionState.correctedImage = img;
@@ -200,8 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 sizeCorrectionBtn.disabled = false;
                                 resetCorrectionBtn.disabled = false;
                                 updateCorrectionInfo('HEIC/HEIF image converted and loaded');
+
+                                // Memory cleanup: revoke object URL
+                                URL.revokeObjectURL(objectUrl);
                             };
-                            img.src = URL.createObjectURL(compressedBlob);
+                            img.src = objectUrl;
                         }, 'image/jpeg');
 
                     } catch (error) {
@@ -524,11 +528,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (err.name !== 'AbortError') throw err;
                 }
             } else {
+                // Fallback to traditional download for unsupported browsers
                 const link = document.createElement('a');
                 link.download = fileName;
-                link.href = URL.createObjectURL(blob);
+                const objectUrl = URL.createObjectURL(blob);
+                link.href = objectUrl;
                 link.click();
-                URL.revokeObjectURL(link.href);
+                // Memory cleanup: revoke object URL
+                URL.revokeObjectURL(objectUrl);
                 updateCorrectionInfo('Saved!');
                 setTimeout(resetCorrectionScreen, 1000);
             }
@@ -545,8 +552,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = URL.createObjectURL(blob);
             const previewImage = document.getElementById('previewImage');
             const previewModal = document.getElementById('previewModal');
+
+            // Clean up previous URL if exists
+            if (previewImage.src) {
+                const oldUrl = previewImage.src;
+                if (oldUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(oldUrl);
+                }
+            }
+
             previewImage.src = url;
             previewModal.style.display = 'flex';
+
+            // Clean up URL when modal is closed
+            const closeButtons = previewModal.querySelectorAll('.close-modal-btn');
+            const cleanup = () => {
+                URL.revokeObjectURL(url);
+                closeButtons.forEach(btn => btn.removeEventListener('click', cleanup));
+            };
+            closeButtons.forEach(btn => btn.addEventListener('click', cleanup, { once: true }));
         } catch (error) {
             console.error('Preview error:', error);
             alert('プレビュー表示中にエラーが発生しました');
@@ -569,6 +593,9 @@ document.addEventListener('DOMContentLoaded', () => {
         resetCorrectionBtn.disabled = true;
         if (correctionCtx) {
             correctionCtx.clearRect(0, 0, correctionCanvas.width, correctionCanvas.height);
+            // Memory cleanup: reset canvas dimensions
+            correctionCanvas.width = 0;
+            correctionCanvas.height = 0;
         }
         updateCorrectionInfo('画像を選択してください');
     }
