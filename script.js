@@ -545,6 +545,215 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleImageUpload(e) {
+        if (e.target.files && e.target.files[0]) {
+            handleFile(e.target.files[0]);
+        }
+    }
+
+    // Helper to compress image
+    function compressImage(fileOrBlob) {
+        return new Promise((resolve, reject) => {
+            if (typeof Compressor === 'undefined') {
+                console.warn('Compressor.js not loaded, skipping compression');
+                resolve(fileOrBlob);
+                return;
+            }
+
+            try {
+                new Compressor(fileOrBlob, {
+                    quality: 0.8,
+                    maxWidth: 2048,
+                    maxHeight: 2048,
+                    mimeType: 'image/jpeg',
+                    success(result) {
+                        resolve(result);
+                    },
+                    error(err) {
+                        console.error('Compression error:', err);
+                        // Fallback to original if compression fails
+                        resolve(fileOrBlob);
+                    },
+                });
+            } catch (e) {
+                console.error('Compressor initialization error:', e);
+                resolve(fileOrBlob);
+            }
+        });
+    }
+
+    async function handleFile(file, fileHandle = null) {
+        state.originalFileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        state.originalFileHandle = fileHandle; // Store file handle if available
+
+        // Check if file is HEIC/HEIF format
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const isHEIC = fileExtension === 'heic' || fileExtension === 'heif';
+
+        if (isHEIC) {
+            const originalText = uploadPlaceholder.innerHTML;
+            uploadPlaceholder.innerHTML = '<p>HEIC変換中...</p>';
+
+            // Helper to get libheif instance
+            const getLibHeif = async () => {
+                if (typeof libheif === 'undefined') {
+                    throw new Error('libheif library not loaded');
+                }
+
+                // If HeifDecoder is already available on libheif object
+                if (libheif.HeifDecoder) {
+                    return libheif;
+                }
+
+                // If libheif is a function (Emscripten module factory), call it
+                if (typeof libheif === 'function') {
+                    console.log('Initializing libheif WASM module...');
+                    const instance = await libheif();
+                    if (instance.HeifDecoder) {
+                        return instance;
+                    }
+                }
+
+                throw new Error('Could not find HeifDecoder in libheif');
+            };
+
+            try {
+                const heifModule = await getLibHeif();
+                const reader = new FileReader();
+
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const decoder = new heifModule.HeifDecoder();
+                        const data = decoder.decode(arrayBuffer);
+
+                        if (!data || data.length === 0) {
+                            throw new Error('No image data found in HEIC file');
+                        }
+
+                        const image = data[0];
+                        const width = image.get_width();
+                        const height = image.get_height();
+
+                        // Create a temporary canvas to render the image
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = width;
+                        tempCanvas.height = height;
+                        const ctx = tempCanvas.getContext('2d');
+                        const imageData = ctx.createImageData(width, height);
+
+                        await new Promise((resolve, reject) => {
+                            image.display(imageData, (displayData) => {
+                                if (!displayData) {
+                                    reject(new Error('Failed to decode image data'));
+                                } else {
+                                    resolve(displayData);
+                                }
+                            });
+                        });
+
+                        ctx.putImageData(imageData, 0, 0);
+
+                        // Convert canvas to blob for compression
+                        tempCanvas.toBlob(async (blob) => {
+                            if (!blob) {
+                                throw new Error('Failed to create blob from canvas');
+                            }
+
+                            // Compress the converted HEIC image
+                            const compressedBlob = await compressImage(blob);
+
+                            // Load compressed image
+                            const img = new Image();
+                            img.onload = () => {
+                                state.currentImage = img;
+                                uploadPlaceholder.style.display = 'none';
+                                uploadPlaceholder.innerHTML = originalText; // Restore text
+                                canvas.style.display = 'block';
+                                saveLocalBtn.disabled = false;
+                                savePCBtn.disabled = false;
+                                previewBtn.disabled = false;
+                                resetBtn.disabled = false;
+
+                                // Initialize first stamp
+                                state.stamps = [{
+                                    id: Date.now(),
+                                    text: state.presets.length > 0 ? state.presets[0] : "Sample",
+                                    x: 50,
+                                    y: 50,
+                                    fontSize: 50,
+                                    opacity: 0.8,
+                                    color: '#ffffff'
+                                }];
+                                state.activeStampIndex = 0;
+
+                                updateUIFromState();
+                                draw();
+                            };
+                            img.src = URL.createObjectURL(compressedBlob);
+                        }, 'image/jpeg');
+
+                    } catch (error) {
+                        console.error('HEIC conversion error:', error);
+                        alert('HEICファイルの変換に失敗しました: ' + (error.message || error));
+                        uploadPlaceholder.innerHTML = originalText;
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+
+            } catch (error) {
+                console.error('libheif initialization error:', error);
+                alert('HEIC変換ライブラリの初期化に失敗しました: ' + (error.message || error));
+                uploadPlaceholder.innerHTML = originalText;
+            }
+
+        } else {
+            // Normal image processing with compression
+            const originalText = uploadPlaceholder.innerHTML;
+            uploadPlaceholder.innerHTML = '<p>画像を読み込み中...</p>';
+
+            try {
+                const compressedFile = await compressImage(file);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        state.currentImage = img;
+                        uploadPlaceholder.style.display = 'none';
+                        uploadPlaceholder.innerHTML = originalText;
+                        canvas.style.display = 'block';
+                        saveLocalBtn.disabled = false;
+                        savePCBtn.disabled = false;
+                        previewBtn.disabled = false;
+                        resetBtn.disabled = false;
+
+                        // Initialize first stamp
+                        state.stamps = [{
+                            id: Date.now(),
+                            text: state.presets.length > 0 ? state.presets[0] : "Sample",
+                            x: 50,
+                            y: 50,
+                            fontSize: 50,
+                            opacity: 0.8,
+                            color: '#ffffff'
+                        }];
+                        state.activeStampIndex = 0;
+
+                        updateUIFromState();
+                        draw();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Image load error:', error);
+                alert('画像の読み込みに失敗しました');
+                uploadPlaceholder.innerHTML = originalText;
+            }
+        }
+    }
+
+    function addNewStamp() {
+        if (state.stamps.length >= MAX_STAMPS) return;
 
         state.stamps.push({
             id: Date.now(),

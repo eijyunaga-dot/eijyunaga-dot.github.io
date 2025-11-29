@@ -69,10 +69,191 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resetCorrectionBtn) resetCorrectionBtn.addEventListener('click', resetCorrectionScreen);
     }
 
-    correctionCanvas.width = img.width;
-    correctionCanvas.height = img.height;
-    correctionCtx.drawImage(img, 0, 0);
-}
+
+    function handleCorrectionImageUpload(e) {
+        if (e.target.files && e.target.files[0]) {
+            handleCorrectionFile(e.target.files[0]);
+        }
+    }
+
+    // Helper to compress image
+    function compressImage(fileOrBlob) {
+        return new Promise((resolve, reject) => {
+            if (typeof Compressor === 'undefined') {
+                console.warn('Compressor.js not loaded, skipping compression');
+                resolve(fileOrBlob);
+                return;
+            }
+
+            try {
+                new Compressor(fileOrBlob, {
+                    quality: 0.8,
+                    maxWidth: 2048,
+                    maxHeight: 2048,
+                    mimeType: 'image/jpeg',
+                    success(result) {
+                        resolve(result);
+                    },
+                    error(err) {
+                        console.error('Compression error:', err);
+                        // Fallback to original if compression fails
+                        resolve(fileOrBlob);
+                    },
+                });
+            } catch (e) {
+                console.error('Compressor initialization error:', e);
+                resolve(fileOrBlob);
+            }
+        });
+    }
+
+    function handleCorrectionFile(file) {
+        correctionState.originalFileName = file.name.replace(/\.[^/.]+$/, "");
+
+        // Check if file is HEIC/HEIF format
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const isHEIC = fileExtension === 'heic' || fileExtension === 'heif';
+
+        if (isHEIC) {
+            updateCorrectionInfo('Initializing HEIC converter...');
+
+            // Helper to get libheif instance
+            const getLibHeif = async () => {
+                if (typeof libheif === 'undefined') {
+                    throw new Error('libheif library not loaded');
+                }
+
+                // If HeifDecoder is already available on libheif object
+                if (libheif.HeifDecoder) {
+                    return libheif;
+                }
+
+                // If libheif is a function (Emscripten module factory), call it
+                if (typeof libheif === 'function') {
+                    console.log('Initializing libheif WASM module...');
+                    const instance = await libheif();
+                    if (instance.HeifDecoder) {
+                        return instance;
+                    }
+                }
+
+                throw new Error('Could not find HeifDecoder in libheif');
+            };
+
+            getLibHeif().then(heifModule => {
+                updateCorrectionInfo('Converting HEIC/HEIF to JPEG...');
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const decoder = new heifModule.HeifDecoder();
+                        const data = decoder.decode(arrayBuffer);
+
+                        if (!data || data.length === 0) {
+                            throw new Error('No image data found in HEIC file');
+                        }
+
+                        const image = data[0];
+                        const width = image.get_width();
+                        const height = image.get_height();
+
+                        // Create a temporary canvas to render the image
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = width;
+                        tempCanvas.height = height;
+                        const ctx = tempCanvas.getContext('2d');
+                        const imageData = ctx.createImageData(width, height);
+
+                        await new Promise((resolve, reject) => {
+                            image.display(imageData, (displayData) => {
+                                if (!displayData) {
+                                    reject(new Error('Failed to decode image data'));
+                                } else {
+                                    resolve(displayData);
+                                }
+                            });
+                        });
+
+                        ctx.putImageData(imageData, 0, 0);
+
+                        // Convert canvas to blob for compression
+                        tempCanvas.toBlob(async (blob) => {
+                            if (!blob) {
+                                throw new Error('Failed to create blob from canvas');
+                            }
+
+                            // Compress the converted HEIC image
+                            updateCorrectionInfo('Compressing image...');
+                            const compressedBlob = await compressImage(blob);
+
+                            // Load compressed image
+                            const img = new Image();
+                            img.onload = () => {
+                                correctionState.originalImage = img;
+                                correctionState.correctedImage = img;
+                                drawCorrectionImage(img);
+                                correctionUploadPlaceholder.style.display = 'none';
+                                correctionCanvas.style.display = 'block';
+                                autoCorrectionBtn.disabled = false;
+                                cloudyCorrectionBtn.disabled = false;
+                                backlightCorrectionBtn.disabled = false;
+                                sizeCorrectionBtn.disabled = false;
+                                resetCorrectionBtn.disabled = false;
+                                updateCorrectionInfo('HEIC/HEIF image converted and loaded');
+                            };
+                            img.src = URL.createObjectURL(compressedBlob);
+                        }, 'image/jpeg');
+
+                    } catch (error) {
+                        console.error('HEIC conversion error:', error);
+                        updateCorrectionInfo('Error converting HEIC/HEIF file: ' + (error.message || error));
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }).catch(error => {
+                console.error('libheif initialization error:', error);
+                updateCorrectionInfo('Error initializing converter: ' + (error.message || error));
+            });
+
+        } else {
+            // Normal image processing with compression
+            updateCorrectionInfo('Loading and compressing image...');
+            compressImage(file).then(compressedFile => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        correctionState.originalImage = img;
+                        correctionState.correctedImage = img;
+                        drawCorrectionImage(img);
+                        correctionUploadPlaceholder.style.display = 'none';
+                        correctionCanvas.style.display = 'block';
+                        autoCorrectionBtn.disabled = false;
+                        cloudyCorrectionBtn.disabled = false;
+                        backlightCorrectionBtn.disabled = false;
+                        sizeCorrectionBtn.disabled = false;
+                        resetCorrectionBtn.disabled = false;
+                        updateCorrectionInfo('Original image loaded');
+                    };
+                    img.onerror = () => {
+                        updateCorrectionInfo('Error loading image. Please try a different file.');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(compressedFile);
+            }).catch(error => {
+                console.error('Compression error:', error);
+                updateCorrectionInfo('Error loading image: ' + error.message);
+            });
+        }
+    }
+
+    function drawCorrectionImage(img) {
+        if (!correctionCtx) return;
+        correctionCanvas.width = img.width;
+        correctionCanvas.height = img.height;
+        correctionCtx.drawImage(img, 0, 0);
+    }
 
     function updateCorrectionInfo(message) {
         if (correctionInfo) {
