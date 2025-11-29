@@ -550,8 +550,81 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Dynamic library loading utilities
+    let compressorLoaded = false;
+    let libheifLoaded = false;
+
+    async function loadCompressor() {
+        if (compressorLoaded || typeof Compressor !== 'undefined') {
+            compressorLoaded = true;
+            return true;
+        }
+
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js';
+            script.onload = () => {
+                compressorLoaded = true;
+                console.log('Compressor.js loaded on-demand');
+                resolve(true);
+            };
+            script.onerror = () => {
+                console.warn('Failed to load Compressor.js');
+                resolve(false);
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    async function loadLibHeif() {
+        if (libheifLoaded || typeof libheif !== 'undefined') {
+            libheifLoaded = true;
+            return true;
+        }
+
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/libheif-js@1.19.8/libheif-wasm/libheif-bundle.js';
+            script.onload = () => {
+                libheifLoaded = true;
+                console.log('libheif-js loaded on-demand (2.5MB saved from initial load)');
+                resolve(true);
+            };
+            script.onerror = () => {
+                console.warn('Failed to load libheif-js');
+                resolve(false);
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    // Check if browser natively supports HEIC/HEIF
+    async function checkNativeHEICSupport() {
+        return new Promise((resolve) => {
+            const img = new Image();
+            const timeout = setTimeout(() => {
+                resolve(false);
+            }, 100);
+
+            img.onload = () => {
+                clearTimeout(timeout);
+                resolve(true);
+            };
+            img.onerror = () => {
+                clearTimeout(timeout);
+                resolve(false);
+            };
+
+            // Minimal HEIC data URI (invalid but enough to test support)
+            img.src = 'data:image/heic;base64,AAAA';
+        });
+    }
+
     // Helper to compress image
-    function compressImage(fileOrBlob) {
+    async function compressImage(fileOrBlob) {
+        // Load Compressor.js on-demand
+        await loadCompressor();
+
         return new Promise((resolve, reject) => {
             if (typeof Compressor === 'undefined') {
                 console.warn('Compressor.js not loaded, skipping compression');
@@ -592,6 +665,62 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isHEIC) {
             const originalText = uploadPlaceholder.innerHTML;
             uploadPlaceholder.innerHTML = '<p>HEIC変換中...</p>';
+
+            // Check if browser natively supports HEIC
+            const nativeSupport = await checkNativeHEICSupport();
+
+            if (nativeSupport) {
+                // Browser supports HEIC natively, no conversion needed!
+                console.log('Browser natively supports HEIC - skipping conversion');
+                uploadPlaceholder.innerHTML = '<p>画像を読み込み中...</p>';
+
+                try {
+                    const compressedFile = await compressImage(file);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            state.currentImage = img;
+                            uploadPlaceholder.style.display = 'none';
+                            uploadPlaceholder.innerHTML = originalText;
+                            canvas.style.display = 'block';
+                            saveLocalBtn.disabled = false;
+                            savePCBtn.disabled = false;
+                            previewBtn.disabled = false;
+                            resetBtn.disabled = false;
+
+                            // Initialize first stamp
+                            state.stamps = [{
+                                id: Date.now(),
+                                text: state.presets.length > 0 ? state.presets[0] : "Sample",
+                                x: 50,
+                                y: 50,
+                                fontSize: 50,
+                                opacity: 0.8,
+                                color: '#ffffff'
+                            }];
+                            state.activeStampIndex = 0;
+
+                            updateUIFromState();
+                            draw();
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(compressedFile);
+                } catch (error) {
+                    console.error('Native HEIC load error:', error);
+                    uploadPlaceholder.innerHTML = originalText;
+                }
+                return;
+            }
+
+            // Browser doesn't support HEIC, load libheif-js on-demand
+            const libheifLoadSuccess = await loadLibHeif();
+            if (!libheifLoadSuccess) {
+                alert('HEIC変換ライブラリの読み込みに失敗しました');
+                uploadPlaceholder.innerHTML = originalText;
+                return;
+            }
 
             // Helper to get libheif instance
             const getLibHeif = async () => {
