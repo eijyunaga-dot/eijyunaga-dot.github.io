@@ -397,34 +397,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function applyAutoCorrection() {
         if (!correctionState.originalImage || !correctionCtx) return;
-        updateCorrectionInfo('Applying auto correction...');
+        updateCorrectionInfo('自動補正を適用中...');
 
         drawCorrectionImage(correctionState.originalImage);
         const imageData = correctionCtx.getImageData(0, 0, correctionCanvas.width, correctionCanvas.height);
         const data = imageData.data;
 
-        let rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0;
+        // パラメータ設定: コントラストを下げて、彩度を上げる
+        const contrastFactor = 0.9; // 1.0未満でコントラスト低下
+        const saturationFactor = 1.4; // 1.0以上で彩度強調
 
         for (let i = 0; i < data.length; i += 4) {
-            rMin = Math.min(rMin, data[i]);
-            rMax = Math.max(rMax, data[i]);
-            gMin = Math.min(gMin, data[i + 1]);
-            gMax = Math.max(gMax, data[i + 1]);
-            bMin = Math.min(bMin, data[i + 2]);
-            bMax = Math.max(bMax, data[i + 2]);
-        }
+            let r = data[i];
+            let g = data[i + 1];
+            let b = data[i + 2];
 
-        for (let i = 0; i < data.length; i += 4) {
-            if (rMax > rMin) data[i] = ((data[i] - rMin) / (rMax - rMin)) * 255;
-            if (gMax > gMin) data[i + 1] = ((data[i + 1] - gMin) / (gMax - gMin)) * 255;
-            if (bMax > bMin) data[i + 2] = ((data[i + 2] - bMin) / (bMax - bMin)) * 255;
+            // 1. コントラスト調整
+            // 中間グレー(128)を中心に収縮させる
+            r = (r - 128) * contrastFactor + 128;
+            g = (g - 128) * contrastFactor + 128;
+            b = (b - 128) * contrastFactor + 128;
+
+            // クランプ (0-255)
+            r = Math.min(255, Math.max(0, r));
+            g = Math.min(255, Math.max(0, g));
+            b = Math.min(255, Math.max(0, b));
+
+            // 2. 彩度調整
+            // 輝度を計算 (Rec. 709係数)
+            const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+            // 輝度と各色の差を広げる
+            r = gray + (r - gray) * saturationFactor;
+            g = gray + (g - gray) * saturationFactor;
+            b = gray + (b - gray) * saturationFactor;
+
+            // 最終クランプ
+            data[i] = Math.min(255, Math.max(0, r));
+            data[i + 1] = Math.min(255, Math.max(0, g));
+            data[i + 2] = Math.min(255, Math.max(0, b));
         }
 
         correctionCtx.putImageData(imageData, 0, 0);
         saveCorrectedLocalBtn.disabled = false;
         saveCorrectedPCBtn.disabled = false;
         saveCorrectedPreviewBtn.disabled = false;
-        updateCorrectionInfo('補正を適用しました');
+        updateCorrectionInfo('自動補正(低コントラスト・高彩度)を適用しました');
     }
 
     async function applyCloudyCorrection() {
