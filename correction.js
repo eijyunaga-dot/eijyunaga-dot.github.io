@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const correctionCtx = correctionCanvas ? correctionCanvas.getContext('2d') : null;
     const correctionInfo = document.getElementById('correctionInfo');
     const autoCorrectionBtn = document.getElementById('autoCorrectionBtn');
-    const darkCorrectionBtn = document.getElementById('darkCorrectionBtn');
+    const cloudyCorrectionBtn = document.getElementById('cloudyCorrectionBtn');
+    const backlightCorrectionBtn = document.getElementById('backlightCorrectionBtn');
     const sizeCorrectionBtn = document.getElementById('sizeCorrectionBtn');
     const saveCorrectedLocalBtn = document.getElementById('saveCorrectedLocalBtn');
     const saveCorrectedPCBtn = document.getElementById('saveCorrectedPCBtn');
@@ -59,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (autoCorrectionBtn) autoCorrectionBtn.addEventListener('click', applyAutoCorrection);
-        if (darkCorrectionBtn) darkCorrectionBtn.addEventListener('click', applyDarkCorrection);
+        if (cloudyCorrectionBtn) cloudyCorrectionBtn.addEventListener('click', applyCloudyCorrection);
+        if (backlightCorrectionBtn) backlightCorrectionBtn.addEventListener('click', applyBacklightCorrection);
         if (sizeCorrectionBtn) sizeCorrectionBtn.addEventListener('click', applySizeCorrection);
         if (saveCorrectedLocalBtn) saveCorrectedLocalBtn.addEventListener('click', saveCorrectedLocal);
         if (saveCorrectedPCBtn) saveCorrectedPCBtn.addEventListener('click', saveCorrectedPC);
@@ -67,40 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resetCorrectionBtn) resetCorrectionBtn.addEventListener('click', resetCorrectionScreen);
     }
 
-    function handleCorrectionImageUpload(e) {
-        if (e.target.files && e.target.files[0]) {
-            handleCorrectionFile(e.target.files[0]);
-        }
-    }
-
-    function handleCorrectionFile(file) {
-        correctionState.originalFileName = file.name.replace(/\.[^/.]+$/, "");
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                correctionState.originalImage = img;
-                correctionState.correctedImage = img;
-                drawCorrectionImage(img);
-                correctionUploadPlaceholder.style.display = 'none';
-                correctionCanvas.style.display = 'block';
-                autoCorrectionBtn.disabled = false;
-                darkCorrectionBtn.disabled = false;
-                sizeCorrectionBtn.disabled = false;
-                resetCorrectionBtn.disabled = false;
-                updateCorrectionInfo('Original image loaded');
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function drawCorrectionImage(img) {
-        if (!correctionCtx) return;
-        correctionCanvas.width = img.width;
-        correctionCanvas.height = img.height;
-        correctionCtx.drawImage(img, 0, 0);
-    }
+    correctionCanvas.width = img.width;
+    correctionCanvas.height = img.height;
+    correctionCtx.drawImage(img, 0, 0);
+}
 
     function updateCorrectionInfo(message) {
         if (correctionInfo) {
@@ -140,48 +112,40 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCorrectionInfo('補正を適用しました');
     }
 
-    async function applyDarkCorrection() {
+    async function applyCloudyCorrection() {
         if (!correctionState.originalImage || !correctionCtx) return;
-        updateCorrectionInfo('Applying fixed correction...');
+        updateCorrectionInfo('曇り→晴天補正を適用中...');
 
         drawCorrectionImage(correctionState.originalImage);
         const imageData = correctionCtx.getImageData(0, 0, correctionCanvas.width, correctionCanvas.height);
         const data = imageData.data;
 
+        // 曇り空を晴天に見せる補正：明るさ向上、彩度強化、コントラスト強化
         for (let i = 0; i < data.length; i += 4) {
             let r = data[i], g = data[i + 1], b = data[i + 2];
 
-            const brightnessFactor = 1.53;
+            // 明るさ向上（+25%）
+            const brightnessFactor = 1.25;
             r *= brightnessFactor;
             g *= brightnessFactor;
             b *= brightnessFactor;
 
-            const shadowThreshold = 80;
-            if (r < shadowThreshold) r = r + (shadowThreshold - r) * 0.7;
-            if (g < shadowThreshold) g = g + (shadowThreshold - g) * 0.7;
-            if (b < shadowThreshold) b = b + (shadowThreshold - b) * 0.7;
-
-            const highlightThreshold = 175;
-            if (r > highlightThreshold) r = r - (r - highlightThreshold) * 0.15;
-            if (g > highlightThreshold) g = g - (g - highlightThreshold) * 0.15;
-            if (b > highlightThreshold) b = b - (b - highlightThreshold) * 0.15;
-
-            r = Math.max(18, r);
-            g = Math.max(18, g);
-            b = Math.max(18, b);
-
-            const contrastFactor = 0.8, mid = 128;
+            // コントラスト強化（中間値128を基準に±20%）
+            const contrastFactor = 1.2, mid = 128;
             r = mid + (r - mid) * contrastFactor;
             g = mid + (g - mid) * contrastFactor;
             b = mid + (b - mid) * contrastFactor;
 
-            const gray = (r + g + b) / 3, saturationFactor = 1.54;
+            // 彩度強化（+40%）
+            const gray = (r + g + b) / 3;
+            const saturationFactor = 1.4;
             r = gray + (r - gray) * saturationFactor;
             g = gray + (g - gray) * saturationFactor;
             b = gray + (b - gray) * saturationFactor;
 
-            r *= 0.92;
-            b *= 1.08;
+            // 青みを少し減らし、温かみを追加（晴天感演出）
+            r *= 1.05;
+            b *= 0.95;
 
             data[i] = Math.min(255, Math.max(0, r));
             data[i + 1] = Math.min(255, Math.max(0, g));
@@ -192,42 +156,136 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCorrectedLocalBtn.disabled = false;
         saveCorrectedPCBtn.disabled = false;
         saveCorrectedPreviewBtn.disabled = false;
-        updateCorrectionInfo('補正を適用しました');
+        updateCorrectionInfo('曇り→晴天補正を適用しました');
+    }
+
+    async function applyBacklightCorrection() {
+        if (!correctionState.originalImage || !correctionCtx) return;
+        updateCorrectionInfo('逆光補正を適用中...');
+
+        drawCorrectionImage(correctionState.originalImage);
+        const imageData = correctionCtx.getImageData(0, 0, correctionCanvas.width, correctionCanvas.height);
+        const data = imageData.data;
+
+        // 逆光補正：露出+8、ハイライト-15、シャドウ+50、コントラスト-20、明るさ+30、彩度+5、鮮やかさ+50、ブラックポイント+10
+        for (let i = 0; i < data.length; i += 4) {
+            let r = data[i], g = data[i + 1], b = data[i + 2];
+
+            // 露出+8 (約+3%の明るさ)
+            const exposureFactor = 1.03;
+            r *= exposureFactor;
+            g *= exposureFactor;
+            b *= exposureFactor;
+
+            // 明るさ+30 (約+12%)
+            const brightnessFactor = 1.12;
+            r *= brightnessFactor;
+            g *= brightnessFactor;
+            b *= brightnessFactor;
+
+            // シャドウ+50 (暗い部分を持ち上げる)
+            const shadowThreshold = 100;
+            if (r < shadowThreshold) r = r + (shadowThreshold - r) * 0.5;
+            if (g < shadowThreshold) g = g + (shadowThreshold - g) * 0.5;
+            if (b < shadowThreshold) b = b + (shadowThreshold - b) * 0.5;
+
+            // ハイライト-15 (明るい部分を抑える、白飛び防止)
+            const highlightThreshold = 200;
+            if (r > highlightThreshold) r = r - (r - highlightThreshold) * 0.15;
+            if (g > highlightThreshold) g = g - (g - highlightThreshold) * 0.15;
+            if (b > highlightThreshold) b = b - (b - highlightThreshold) * 0.15;
+
+            // ブラックポイント+10 (最暗部を持ち上げる)
+            r = Math.max(10, r);
+            g = Math.max(10, g);
+            b = Math.max(10, b);
+
+            // コントラスト-20 (約80%に減少)
+            const contrastFactor = 0.8, mid = 128;
+            r = mid + (r - mid) * contrastFactor;
+            g = mid + (g - mid) * contrastFactor;
+            b = mid + (b - mid) * contrastFactor;
+
+            // 彩度+5、鮮やかさ+50 (合計約+55%の彩度向上)
+            const gray = (r + g + b) / 3;
+            const saturationFactor = 1.55;
+            r = gray + (r - gray) * saturationFactor;
+            g = gray + (g - gray) * saturationFactor;
+            b = gray + (b - gray) * saturationFactor;
+
+            // 白飛び防止の最終チェック（255に近づけすぎない）
+            data[i] = Math.min(250, Math.max(0, r));
+            data[i + 1] = Math.min(250, Math.max(0, g));
+            data[i + 2] = Math.min(250, Math.max(0, b));
+        }
+
+        correctionCtx.putImageData(imageData, 0, 0);
+        saveCorrectedLocalBtn.disabled = false;
+        saveCorrectedPCBtn.disabled = false;
+        saveCorrectedPreviewBtn.disabled = false;
+        updateCorrectionInfo('逆光補正を適用しました（白飛び防止済み）');
     }
 
     async function applySizeCorrection() {
         if (!correctionState.originalImage) return;
-        updateCorrectionInfo('Resizing to 1MB...');
+        updateCorrectionInfo('1MB以下にリサイズ中...');
 
-        let quality = 0.9, blob = await canvasToBlob(correctionCanvas, quality);
+        const targetSize = 1024 * 1024; // 1MB = 1024KB = 1048576 bytes
+        let quality = 0.95;
+        let blob = await canvasToBlob(correctionCanvas, quality);
+        let iterationCount = 0;
+        const maxIterations = 50;
 
-        while (blob.size > 1024 * 1024 && quality > 0.1) {
+        // 品質を下げて1MB以下を目指す
+        while (blob.size > targetSize && quality > 0.05 && iterationCount < maxIterations) {
             quality -= 0.05;
             blob = await canvasToBlob(correctionCanvas, quality);
+            iterationCount++;
         }
 
-        if (blob.size > 1024 * 1024) {
-            const scaleFactor = Math.sqrt((1024 * 1024) / blob.size);
-            const newWidth = Math.floor(correctionCanvas.width * scaleFactor);
-            const newHeight = Math.floor(correctionCanvas.height * scaleFactor);
+        // まだ1MBを超えている場合は画像サイズを縮小
+        if (blob.size > targetSize) {
+            let scaleFactor = Math.sqrt(targetSize / blob.size) * 0.95; // 安全マージンで95%
+            let attempts = 0;
+            const maxAttempts = 10;
 
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = newWidth;
-            tempCanvas.height = newHeight;
-            tempCanvas.getContext('2d').drawImage(correctionCanvas, 0, 0, newWidth, newHeight);
+            while (blob.size > targetSize && attempts < maxAttempts) {
+                const newWidth = Math.floor(correctionCanvas.width * scaleFactor);
+                const newHeight = Math.floor(correctionCanvas.height * scaleFactor);
 
-            correctionCanvas.width = newWidth;
-            correctionCanvas.height = newHeight;
-            correctionCtx.drawImage(tempCanvas, 0, 0);
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = newWidth;
+                tempCanvas.height = newHeight;
+                tempCanvas.getContext('2d').drawImage(correctionCanvas, 0, 0, newWidth, newHeight);
 
-            blob = await canvasToBlob(correctionCanvas, 0.9);
+                correctionCanvas.width = newWidth;
+                correctionCanvas.height = newHeight;
+                correctionCtx.drawImage(tempCanvas, 0, 0);
+
+                // リサイズ後に再度圧縮
+                quality = 0.9;
+                blob = await canvasToBlob(correctionCanvas, quality);
+
+                while (blob.size > targetSize && quality > 0.05) {
+                    quality -= 0.05;
+                    blob = await canvasToBlob(correctionCanvas, quality);
+                }
+
+                scaleFactor *= 0.95; // さらに縮小率を上げる
+                attempts++;
+            }
         }
 
-        const sizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+        const sizeKB = (blob.size / 1024).toFixed(2);
+        const guarantee = blob.size <= targetSize ? '✅' : '⚠️';
         saveCorrectedLocalBtn.disabled = false;
         saveCorrectedPCBtn.disabled = false;
         saveCorrectedPreviewBtn.disabled = false;
-        updateCorrectionInfo(`Resized to ${sizeMB}MB`);
+        updateCorrectionInfo(`${guarantee} リサイズ完了: ${sizeKB}KB (${correctionCanvas.width}x${correctionCanvas.height}px)`);
+
+        if (blob.size > targetSize) {
+            alert('警告: 1MB以下にできませんでした。画像が複雑すぎる可能性があります。');
+        }
     }
 
     function canvasToBlob(canvas, quality) {
@@ -321,7 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
         correctionUploadPlaceholder.style.display = 'flex';
         correctionCanvas.style.display = 'none';
         autoCorrectionBtn.disabled = true;
-        darkCorrectionBtn.disabled = true;
+        cloudyCorrectionBtn.disabled = true;
+        backlightCorrectionBtn.disabled = true;
         sizeCorrectionBtn.disabled = true;
         saveCorrectedLocalBtn.disabled = true;
         saveCorrectedPCBtn.disabled = true;

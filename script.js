@@ -3,15 +3,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_PRESETS = [
         "上着", "ズボン", "肌着上", "肌着下", "靴下", "上靴", "下靴",
         "羽織り", "帽子類", "コート", "タオル", "杖", "SC", "車椅子",
-        "口腔セット", "x2", "x3", "x4", "x5"
+        "口腔セット", "x2", "x3", "x4", "x5",
+        "🥺", "🫣", "✨"
     ];
     const MAX_STAMPS = 8;
 
     const TRANSLATIONS = {
         ja: {
             appTitle: "荷物スタンプ",
-            appSubtitle: "写真にスタンプを追加",
-            start: "はじめる",
+            appSubtitle: "写真にスタンプしたり補正したり",
+            start: "スタンプ",
             settings: "設定",
             back: "戻る",
             language: "言語 / Language",
@@ -48,8 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
             errorSave: "保存中にエラーが発生しました。",
             correction: "画像補正",
             autoCorrection: "自動補正",
-            darkCorrection: "固定補正(暗い画像)",
-            sizeCorrection: "サイズ補正(1MB)",
+            cloudyCorrection: "固定補正(🌦️曇り▶🌤️晴れ)",
+            backlightCorrection: "固定補正(逆光)☀️",
+            sizeCorrection: "サイズ補正(1MB以下)",
+            heicConversion: "HEIC/HEIF➔JPG変換",
             correctionApplied: "補正を適用しました",
             saveCorrected: "補正画像を保存"
         },
@@ -542,48 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleImageUpload(e) {
-        if (e.target.files && e.target.files[0]) {
-            handleFile(e.target.files[0]);
-        }
-    }
-
-    async function handleFile(file, fileHandle = null) {
-        state.originalFileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
-        state.originalFileHandle = fileHandle; // Store file handle if available
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                state.currentImage = img;
-                uploadPlaceholder.style.display = 'none';
-                canvas.style.display = 'block';
-                saveLocalBtn.disabled = false;
-                savePCBtn.disabled = false;
-                previewBtn.disabled = false;
-                resetBtn.disabled = false;
-
-                // Initialize first stamp
-                state.stamps = [{
-                    id: Date.now(),
-                    text: state.presets.length > 0 ? state.presets[0] : "Sample",
-                    x: 50,
-                    y: 50,
-                    fontSize: 50,
-                    opacity: 0.8,
-                    color: '#ffffff'
-                }];
-                state.activeStampIndex = 0;
-
-                updateUIFromState();
-                draw();
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function addNewStamp() {
-        if (state.stamps.length >= MAX_STAMPS) return;
 
         state.stamps.push({
             id: Date.now(),
