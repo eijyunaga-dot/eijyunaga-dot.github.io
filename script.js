@@ -358,6 +358,12 @@ document.addEventListener('DOMContentLoaded', () => {
         backBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.dataset.target;
+
+                // Reset editor if navigating from editor screen
+                if (btn.closest('#editorScreen')) {
+                    resetEditor();
+                }
+
                 if (target === 'homeScreen') navigateTo('home');
             });
         });

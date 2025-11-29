@@ -35,6 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Reset correction screen when going back to home
+        if (correctionScreen) {
+            const backBtn = correctionScreen.querySelector('.back-btn');
+            if (backBtn) {
+                backBtn.addEventListener('click', () => {
+                    resetCorrectionScreen();
+                });
+            }
+        }
+
         if (correctionUploadPlaceholder) {
             correctionUploadPlaceholder.addEventListener('click', () => correctionImageInput.click());
         }
