@@ -214,55 +214,58 @@
                         <p class="help-text">画像を選択してください</p>
                     </div>
 
-                    <div class="correction-buttons">
-                        <button id="autoCorrectionBtn" class="btn primary" disabled>
-                            ✨ <span data-i18n="autoCorrection">自動補正</span>
-                        </button>
-                        <button id="cloudyCorrectionBtn" class="btn primary" disabled>
-                            🌦️ <span data-i18n="cloudyCorrection">固定補正(🌦️曇り▶🌤️晴れ)</span>
-                        </button>
-                        <button id="backlightCorrectionBtn" class="btn primary" disabled>
-                            ☀️ <span data-i18n="backlightCorrection">固定補正(逆光)☀️</span>
-                        </button>
-                        <button id="sizeCorrectionBtn" class="btn primary" disabled>
-                            📦 <span data-i18n="sizeCorrection">サイズ補正(1MB以下)</span>
-                        </button>
-                    </div>
-
+                    <div class="correction-buttons"></div>
+                    <button id="autoCorrectionBtn" class="btn primary" disabled>
+                        ✨ <span data-i18n="autoCorrection">自動補正</span>
+                    </button>
+                    <button id="cloudyCorrectionBtn" class="btn primary" disabled>
+                        ☁️ <span data-i18n="cloudyCorrection">曇り空補正</span>
+                    </button>
+                    <button id="backlightCorrectionBtn" class="btn primary" disabled>
+                        ☀️ <span data-i18n="backlightCorrection">逆光補正</span>
+                    </button>
+                    <button id="sizeCorrectionBtn" class="btn primary" disabled>
+                        📦 <span data-i18n="sizeCorrection">サイズ補正(1MB以下)</span>
+                    </button>
+                    <button id="blurBackgroundBtn" class="btn primary" disabled>
+                        🎭 <span data-i18n="blurBackground">背景ぼかし</span>
+                    </button>
+                    <button id="resetCorrectionBtn" class="btn outline danger" disabled>
+                        <span data-i18n="reset">リセット</span>
+                    </button>
                     <div class="correction-actions">
                         <button id="saveCorrectedLocalBtn" class="btn primary" disabled>
-                            📱 <span data-i18n="saveDevice">本体に保存(スマホ等)</span>
+                            <span>📱</span> <span data-i18n="saveDevice">本体に保存(スマホ等)</span>
                         </button>
                         <button id="saveCorrectedPCBtn" class="btn secondary" disabled>
-                            💻 <span data-i18n="savePC">画像を保存(PC)</span>
+                            <span>💻</span> <span data-i18n="savePC">画像を保存(PC)</span>
                         </button>
                         <button id="saveCorrectedPreviewBtn" class="btn outline" disabled>
                             📋 <span data-i18n="previewOld">プレビュー(旧iPad用)</span>
                         </button>
-                        <button id="resetCorrectionBtn" class="btn outline danger" disabled>
-                            <span data-i18n="reset">リセット</span>
-                        </button>
                     </div>
                 </div>
             </div>
-        </section>
+    </div>
+    </div>
+    </section>
 
-        <!-- Preview Modal -->
-        <div id="previewModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 data-i18n="previewTitle">プレビュー</h3>
-                    <button class="close-modal-btn">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p class="modal-instruction" data-i18n="previewInstruction">画像を長押しして「写真に保存」を選択してください</p>
-                    <img id="previewImage" src="" alt="Preview">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn outline close-modal-btn" data-i18n="close">閉じる</button>
-                </div>
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-i18n="previewTitle">プレビュー</h3>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-instruction" data-i18n="previewInstruction">画像を長押しして「写真に保存」を選択してください</p>
+                <img id="previewImage" src="" alt="Preview">
+            </div>
+            <div class="modal-footer">
+                <button class="btn outline close-modal-btn" data-i18n="close">閉じる</button>
             </div>
         </div>
+    </div>
     </div>
     <!-- Dynamic library loading: libheif-js and compressor.js will be loaded on-demand -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/libheif-js@1.19.8/libheif-wasm/libheif-bundle.js"></script> -->

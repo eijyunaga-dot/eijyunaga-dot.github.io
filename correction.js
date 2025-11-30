@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveCorrectedPCBtn = document.getElementById('saveCorrectedPCBtn');
     const saveCorrectedPreviewBtn = document.getElementById('saveCorrectedPreviewBtn');
     const resetCorrectionBtn = document.getElementById('resetCorrectionBtn');
+    const blurBackgroundBtn = document.getElementById('blurBackgroundBtn'); // Added definition
 
     let correctionState = {
         originalImage: null,
@@ -77,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (saveCorrectedPCBtn) saveCorrectedPCBtn.addEventListener('click', saveCorrectedPC);
         if (saveCorrectedPreviewBtn) saveCorrectedPreviewBtn.addEventListener('click', saveCorrectedPreview);
         if (resetCorrectionBtn) resetCorrectionBtn.addEventListener('click', resetCorrectionScreen);
+        if (blurBackgroundBtn) blurBackgroundBtn.addEventListener('click', applyBlurBackground);
     }
 
 
@@ -224,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             cloudyCorrectionBtn.disabled = false;
                             backlightCorrectionBtn.disabled = false;
                             sizeCorrectionBtn.disabled = false;
+                            if (blurBackgroundBtn) blurBackgroundBtn.disabled = false;
                             resetCorrectionBtn.disabled = false;
                             updateCorrectionInfo('HEIC image loaded (native support)');
                         };
@@ -329,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 cloudyCorrectionBtn.disabled = false;
                                 backlightCorrectionBtn.disabled = false;
                                 sizeCorrectionBtn.disabled = false;
+                                if (blurBackgroundBtn) blurBackgroundBtn.disabled = false;
                                 resetCorrectionBtn.disabled = false;
                                 updateCorrectionInfo('HEIC/HEIF image converted and loaded');
 
@@ -366,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         cloudyCorrectionBtn.disabled = false;
                         backlightCorrectionBtn.disabled = false;
                         sizeCorrectionBtn.disabled = false;
+                        if (blurBackgroundBtn) blurBackgroundBtn.disabled = false;
                         resetCorrectionBtn.disabled = false;
                         updateCorrectionInfo('Original image loaded');
                     };
@@ -735,6 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cloudyCorrectionBtn.disabled = true;
         backlightCorrectionBtn.disabled = true;
         sizeCorrectionBtn.disabled = true;
+        if (blurBackgroundBtn) blurBackgroundBtn.disabled = true;
         saveCorrectedLocalBtn.disabled = true;
         saveCorrectedPCBtn.disabled = true;
         saveCorrectedPreviewBtn.disabled = true;
@@ -745,8 +751,143 @@ document.addEventListener('DOMContentLoaded', () => {
             correctionCanvas.width = 0;
             correctionCanvas.height = 0;
         }
-        updateCorrectionInfo('画像を選択してください');
     }
 
+    // MediaPipe Selfie Segmentation Dynamic Loading
+    let mediaPipeLoaded = false;
+    let selfieSegmentation = null;
+
+    async function loadMediaPipe() {
+        if (mediaPipeLoaded && selfieSegmentation) {
+            return true;
+        }
+
+        updateCorrectionInfo('AIモデルを読み込み中... (初回は数MBの通信が発生します)');
+
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js';
+            script.onload = async () => {
+                try {
+                    const SelfieSegmentation = window.SelfieSegmentation;
+                    selfieSegmentation = new SelfieSegmentation({
+                        locateFile: (file) => {
+                            return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+                        }
+                    });
+
+                    selfieSegmentation.setOptions({
+                        modelSelection: 1, // 0: general, 1: landscape (better for background)
+                    });
+
+                    selfieSegmentation.onResults(onSelfieSegmentationResults);
+
+                    mediaPipeLoaded = true;
+                    console.log('MediaPipe Selfie Segmentation loaded');
+                    resolve(true);
+                } catch (e) {
+                    console.error('MediaPipe initialization error:', e);
+                    reject(e);
+                }
+            };
+            script.onerror = () => {
+                reject(new Error('Failed to load MediaPipe script'));
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    // Callback for MediaPipe results
+    function onSelfieSegmentationResults(results) {
+        if (!correctionCtx || !correctionCanvas) return;
+
+        // Draw the original image first
+        correctionCtx.drawImage(results.image, 0, 0, correctionCanvas.width, correctionCanvas.height);
+
+        // Create a temporary canvas for the blur effect
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = correctionCanvas.width;
+        tempCanvas.height = correctionCanvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        // Draw the blurred version on temp canvas
+        tempCtx.filter = 'blur(10px)'; // Blur strength
+        tempCtx.drawImage(results.image, 0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.filter = 'none';
+
+        // Get image data to manipulate pixels based on segmentation mask
+        const originalImageData = correctionCtx.getImageData(0, 0, correctionCanvas.width, correctionCanvas.height);
+        const blurredImageData = tempCtx.getImageData(0, 0, correctionCanvas.width, correctionCanvas.height);
+        const maskImage = results.segmentationMask; // This is an ImageBitmap or similar
+
+        // We need to draw the mask to a canvas to read its pixel data
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = correctionCanvas.width;
+        maskCanvas.height = correctionCanvas.height;
+        const maskCtx = maskCanvas.getContext('2d');
+        maskCtx.drawImage(maskImage, 0, 0, correctionCanvas.width, correctionCanvas.height);
+        const maskData = maskCtx.getImageData(0, 0, correctionCanvas.width, correctionCanvas.height).data;
+
+        const outputData = originalImageData.data;
+        const blurData = blurredImageData.data;
+
+        // Combine based on mask (mask is white for person, black for background)
+        // We want to show original where mask is white (person), and blurred where mask is black (background)
+        for (let i = 0; i < outputData.length; i += 4) {
+            // Mask value (using red channel, assuming grayscale mask)
+            // 255 = person, 0 = background
+            const maskVal = maskData[i];
+            const personAlpha = maskVal / 255; // 0.0 to 1.0
+            const backgroundAlpha = 1.0 - personAlpha;
+
+            // Simple alpha blending
+            outputData[i] = outputData[i] * personAlpha + blurData[i] * backgroundAlpha;
+            outputData[i + 1] = outputData[i + 1] * personAlpha + blurData[i + 1] * backgroundAlpha;
+            outputData[i + 2] = outputData[i + 2] * personAlpha + blurData[i + 2] * backgroundAlpha;
+            // Alpha channel remains same (usually 255)
+        }
+
+        correctionCtx.putImageData(originalImageData, 0, 0);
+
+        updateCorrectionInfo('背景ぼかしを適用しました');
+        if (saveCorrectedLocalBtn) saveCorrectedLocalBtn.disabled = false;
+        if (saveCorrectedPCBtn) saveCorrectedPCBtn.disabled = false;
+        if (saveCorrectedPreviewBtn) saveCorrectedPreviewBtn.disabled = false;
+    }
+
+    async function applyBlurBackground() {
+        if (!correctionState.originalImage) return;
+
+        // Memory Check (Simple heuristic)
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const imagePixels = correctionState.originalImage.width * correctionState.originalImage.height;
+        const LARGE_IMAGE_THRESHOLD = 4096 * 4096; // ~16MP
+
+        if (isMobile && imagePixels > LARGE_IMAGE_THRESHOLD) {
+            const proceed = confirm('画像サイズが大きいため、メモリ不足でアプリが停止する可能性があります。\n処理を続けますか？');
+            if (!proceed) return;
+        }
+
+        try {
+            updateCorrectionInfo('AIモデルを準備中...');
+            await loadMediaPipe();
+
+            updateCorrectionInfo('人物を検出して背景をぼかしています...');
+
+            // Send image to MediaPipe
+            await selfieSegmentation.send({ image: correctionState.originalImage });
+
+        } catch (error) {
+            console.error('Background blur error:', error);
+            if (error.message && error.message.includes('memory')) {
+                alert('メモリ不足が発生しました。より小さい画像で試すか、他のアプリを終了してください。');
+            } else {
+                alert('背景ぼかし処理中にエラーが発生しました: ' + error.message);
+            }
+            updateCorrectionInfo('エラーが発生しました');
+        }
+    }
+
+    // Initialize
     initCorrection();
 });
