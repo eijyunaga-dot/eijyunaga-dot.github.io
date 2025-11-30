@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Constants & Config ---
     const DEFAULT_PRESETS = [
         "上着", "ズボン", "肌着上", "肌着下", "靴下", "上靴", "下靴",
-        "羽織り", "帽子類", "コート", "タオル", "杖", "SC", "車椅子",
+        "羽織り", "帽子類", "コート", "タオル", "布パンツ", "ひげ剃り", "化粧品類", "携帯電話", "杖", "SC", "車椅子",
         "口腔セット", "x2", "x3", "x4", "x5",
         "🥺", "🫣", "✨"
     ];
@@ -701,8 +701,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 text: state.presets.length > 0 ? state.presets[0] : "Sample",
                                 x: 50,
                                 y: 50,
-                                fontSize: 50,
-                                opacity: 0.8,
+                                fontSize: 100,
+                                opacity: 1.0,
                                 color: '#ffffff'
                             }];
                             state.activeStampIndex = 0;
@@ -816,8 +816,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     text: state.presets.length > 0 ? state.presets[0] : "Sample",
                                     x: 50,
                                     y: 50,
-                                    fontSize: 50,
-                                    opacity: 0.8,
+                                    fontSize: 100,
+                                    opacity: 1.0,
                                     color: '#ffffff'
                                 }];
                                 state.activeStampIndex = 0;
@@ -871,8 +871,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             text: state.presets.length > 0 ? state.presets[0] : "Sample",
                             x: 50,
                             y: 50,
-                            fontSize: 50,
-                            opacity: 0.8,
+                            fontSize: 100,
+                            opacity: 1.0,
                             color: '#ffffff'
                         }];
                         state.activeStampIndex = 0;
@@ -901,8 +901,8 @@ document.addEventListener('DOMContentLoaded', () => {
             text: state.presets.length > 0 ? state.presets[0] : "Sample",
             x: 50 + (state.stamps.length * 5), // Offset slightly
             y: 50 + (state.stamps.length * 5),
-            fontSize: 50,
-            opacity: 0.8,
+            fontSize: 100,
+            opacity: 1.0,
             color: '#ffffff'
         });
         state.activeStampIndex = state.stamps.length - 1;
@@ -969,6 +969,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const x = (canvas.width * stamp.x) / 100;
             const y = (canvas.height * stamp.y) / 100;
+
+            // Shadow for better visibility
+            ctx.shadowColor = "rgba(0,0,0,0.5)";
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            // Outline for better visibility
+            ctx.lineWidth = stamp.fontSize * (canvas.width / 1000) * 0.05; // Relative stroke width
+            ctx.strokeStyle = '#000000'; // Black outline
+            ctx.strokeText(stamp.text, x, y);
 
             ctx.fillText(stamp.text, x, y);
 

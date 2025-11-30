@@ -25,6 +25,7 @@
             <div class="home-content">
                 <h1 class="app-title" data-i18n="appTitle">画像にスタンプしたり補正したりするやつ</h1>
                 <p class="app-subtitle" data-i18n="appSubtitle">下から選択して下さい</p>
+                <p class="version-display">ver 1.00</p>
                 <div class="home-actions horizontal">
                     <button id="startBtn" class="btn primary large">
                         <span class="icon">📸</span> <span data-i18n="start">スタンプ</span>
@@ -127,10 +128,10 @@
                             </button>
                         </div>
                         <p class="help-text small" style="margin-top: 4px; text-align: center;"
-                            data-i18n="addStampHelp">定型文をタップして変更</p>
+                            data-i18n="selectStampHelp">スタンプを長押しタップして選択/移動</p>
                         <p class="help-text small" style="margin-top: 2px; text-align: center; color: #999;"
-                            data-i18n="selectStampHelp">
-                            追加は追加ボタンの後に文字を選択</p>
+                            data-i18n="addStampHelp">
+                            追加は追加ボタンの後に文字を選択する</p>
                     </div>
 
                     <!-- Preset Input -->
@@ -155,7 +156,7 @@
 
                     <div class="control-group">
                         <label data-i18n="opacity">透明度</label>
-                        <input type="range" id="opacityInput" min="0" max="1" step="0.1" value="0.9">
+                        <input type="range" id="opacityInput" min="0" max="1" step="0.1" value="1.0">
                     </div>
 
                     <div class="control-group">
