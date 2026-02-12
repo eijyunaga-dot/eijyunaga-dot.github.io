@@ -1110,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.activeStampIndex = tempActive; // Restore selection
                 draw();
                 resolve(blob);
-            }, 'image/png');
+            }, 'image/jpeg', 0.85);
         });
     }
 
@@ -1119,8 +1119,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const blob = await getStampedImageBlob();
-            const fileName = `${state.originalFileName}_stamped.png`;
-            const file = new File([blob], fileName, { type: 'image/png' });
+            const fileName = `${state.originalFileName}_stamped.jpg`;
+            const file = new File([blob], fileName, { type: 'image/jpeg' });
 
             // Use Web Share API if supported (iOS/Android)
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1147,7 +1147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const blob = await getStampedImageBlob();
-            const fileName = `${state.originalFileName}_stamped.png`;
+            const fileName = `${state.originalFileName}_stamped.jpg`;
 
             // Check if File System Access API is supported
             if ('showSaveFilePicker' in window) {
@@ -1156,8 +1156,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const fileHandle = await window.showSaveFilePicker({
                         suggestedName: fileName,
                         types: [{
-                            description: 'PNG Image',
-                            accept: { 'image/png': ['.png'] }
+                            description: 'JPEG Image',
+                            accept: { 'image/jpeg': ['.jpg', '.jpeg'] }
                         }]
                     });
 
