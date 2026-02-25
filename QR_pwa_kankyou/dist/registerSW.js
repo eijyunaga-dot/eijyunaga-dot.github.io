@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/QR_pwa_kankyou/sw.js', { scope: '/QR_pwa_kankyou/' })})}
